@@ -9,3 +9,5 @@ export const direction = (d: Direction): Middleware => (state: State) => {
     return shouldInclude ? { ...a, [key]: value } : {}
   }, {})
 }
+
+export default direction
