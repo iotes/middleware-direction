@@ -1,46 +1,11 @@
-import {
-  DeviceFactory,
-  HostConfig,
-  Strategy,
-  ClientConfig,
-  DeviceConfig,
-} from '@iotes/core'
-import { DeviceTypes, StrategyConfig } from './types'
+import { Direction, State, Middleware } from '@iotes/core'
 
-export const xStrategy: Strategy<StrategyConfig, DeviceTypes> = ({
-  hostDispatch,
-  deviceDispatch,
-  hostSubscribe,
-  deviceSubscribe,
-}) => async (
-  hostConfig: HostConfig<StrategyConfig>,
-  clientConfig: ClientConfig,
-): Promise<DeviceFactory<DeviceTypes>> => {
-  // HOST FACTORY
-  // Do host set up here
+export const direction = (d: Direction): Middleware => (state: State) => {
+    if (d === undefined || d === null) return state
+    if (d === 'B') return state
 
-  const deviceFactory = (): DeviceFactory<DeviceTypes> => {
-    // DEVICE FACTORIES
-
-    const createDevice = async (
-      deviceConfig: DeviceConfig<'DEVICE_TYPE'>,
-    ) => {
-      // Do device set up here
-      const deviceSetUp = () => {}
-
-      deviceSetUp()
-
-      return deviceConfig
-    }
-
-    // Return dictionary of device factories
-    return {
-      DEVICE_TYPE: createDevice,
-    }
-  }
-
-  return deviceFactory()
+    return Object.entries(state).reduce((a, [key, value]) => {
+        const shouldInclude = (d === value['@@iotes_direction'])
+        return shouldInclude ? { ...a, [key]: value } : {}
+    }, {})
 }
-
-// Export types
-export { DeviceTypes, StrategyConfig }
