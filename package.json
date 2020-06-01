@@ -1,6 +1,6 @@
 {
   "name": "@iotes/middleware-direction",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A middleware for filtering iotes messages by direction",
   "repository": "git://github.com/iotes/middleware-direction.git",
   "homepage": "https://iotes.dev",
