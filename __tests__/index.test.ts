@@ -1,95 +1,75 @@
-// Dual dependency on @iotes-strategy-test
-// uncomment when strategy test is up and running
 
-/*
 import {
   createIotes,
   createDeviceDispatchable,
-  TopologyMap,
   Store,
   Iotes,
+  Strategy,
 } from '@iotes/core'
 
-// import { createLocalStoreAndStrategy } from '@iotes/strategy-test'
+import {
+  StrategyConfig,
+  DeviceTypes,
+  createTestStrategy,
+  config,
+  wait,
+} from '@iotes/strategy-test'
+
 import { direction } from '../src'
 
-// Test data
-
-type DeviceTypes = 'RFID_READER' | 'ROTARY_ENCODER'
-
-const testTopologoy: TopologyMap<{}, DeviceTypes> = {
-  client: { name: 'test' },
-  hosts: [{ name: 'testapp/0', host: 'localhost', port: '8888' }],
-  devices: [
-    {
-      hostName: 'testapp/0',
-      type: 'RFID_READER',
-      name: 'READER/1',
-      channel: 1,
-    },
-    {
-      hostName: 'testapp/0',
-      type: 'ROTARY_ENCODER',
-      name: 'ENCODER/1',
-      channel: 2,
-    },
-  ],
-}
-
-// Tests
-let localModule: Iotes
-let createLocalStrategy: any
-let localStore: Store
+// MODULE
+let remote: Store
+let strategy: Strategy<StrategyConfig, DeviceTypes>
+let iotes: Iotes
 
 describe('Direction middleware', () => {
-  beforeEach(async () => {
-    [localStore, createLocalStrategy] = createLocalStoreAndStrategy()
-    localModule = createIotes({
-      topology: testTopologoy,
-      strategy: createLocalStrategy,
+  // SET UP
+  beforeEach(() => {
+    [remote, strategy] = createTestStrategy()
+    iotes = createIotes({
+      topology: config.topology,
+      strategy,
     })
   })
 
-  test('Only receives in one direction', async () => {
-    let resultIn: any = null
-    let resultOut: any = null
+  afterEach(() => {
+    iotes = null
+  })
 
-    localModule.deviceSubscribe(
-      (_) => {
-        resultOut = 'OUT'
-        resultIn = null
-      },
+  test('Only receives in one direction', async () => {
+    let resultOut: any = null
+    let resultIn: any = null
+
+    const fnIn = (_) => { resultIn = 'IN' }
+
+    const fnOut = (_) => { resultOut = 'OUT' }
+
+    iotes.deviceSubscribe(
+      fnOut,
       undefined,
       [direction('O')],
     )
 
-    localModule.deviceSubscribe(
-      (_) => {
-        resultIn = 'IN'
-      },
+    iotes.deviceSubscribe(
+      fnIn,
       undefined,
       [direction('I')],
     )
 
-    localModule.deviceDispatch(
-      createDeviceDispatchable('NONE', 'RFID_READER', { signal: 'test' }),
+    await wait()
+
+    iotes.deviceDispatch(
+      createDeviceDispatchable('DEVICE_ONE', 'OUT', { source: 'APP' }),
     )
 
     expect(resultIn).toEqual(null)
     expect(resultOut).toEqual('OUT')
 
-    // Wait for something to come in
-    await new Promise((res, rej) => {
-      setTimeout(() => {
-        if (resultIn && resultOut) {
-          res()
-        }
-        rej()
-      }, 100)
-    })
+    remote.dispatch(
+      createDeviceDispatchable('DEVICE_ONE', 'IN', { source: 'REMOTE' }),
+    )
 
     expect(resultIn).toEqual('IN')
     expect(resultOut).toEqual('OUT')
   })
 })
-*/
